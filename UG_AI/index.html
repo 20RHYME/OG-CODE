@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UG AI - XN RAKIB</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ background:#050807;
+ color:#eafff0;
+ font-family:Arial,sans-serif;
+}
+.app{
+ max-width:600px;
+ height:100dvh;
+ margin:auto;
+ display:flex;
+ flex-direction:column;
+ background:linear-gradient(160deg,#06110b,#020403);
+ border:1px solid #123d23;
+}
+header{
+ padding:18px;
+ text-align:center;
+ background:linear-gradient(135deg,#071b0d,#0c3018);
+ border-bottom:1px solid #1b6933;
+}
+.logo{
+ font-size:25px;
+ font-weight:900;
+ color:#62ff91;
+ letter-spacing:3px;
+ text-shadow:0 0 12px #16ff65;
+}
+.status{font-size:11px;color:#9dffb7;margin-top:6px}
+.topbar{
+ display:flex;
+ justify-content:space-between;
+ padding:10px 14px;
+ font-size:12px;
+ color:#7dff9d;
+}
+#chat{
+ flex:1;
+ overflow-y:auto;
+ padding:15px;
+ display:flex;
+ flex-direction:column;
+ gap:13px;
+}
+.msg{
+ max-width:90%;
+ padding:13px;
+ border-radius:15px;
+ line-height:1.55;
+ overflow-wrap:anywhere;
+}
+.bot{
+ align-self:flex-start;
+ background:linear-gradient(145deg,#102719,#07140c);
+ border:1px solid #245b36;
+}
+.user{
+ align-self:flex-end;
+ background:linear-gradient(145deg,#064b27,#092c18);
+ border:1px solid #22a64c;
+}
+.msghead{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:15px;
+ margin-bottom:6px;
+ font-size:11px;
+ color:#77ff9b;
+}
+.speak{
+ background:#102f1b;
+ border:1px solid #36bb60;
+ color:#8affad;
+ border-radius:9px;
+ width:35px;
+ height:32px;
+ font-size:17px;
+ cursor:pointer;
+}
+.speak:active{transform:scale(.92)}
+.controls{
+ padding:12px;
+ border-top:1px solid #174728;
+ background:#050a07;
+}
+#input{
+ width:100%;
+ min-height:50px;
+ max-height:110px;
+ resize:none;
+ background:#0b160e;
+ color:white;
+ border:1px solid #28643a;
+ border-radius:12px;
+ padding:13px;
+ outline:none;
+ font-size:15px;
+}
+.buttons{
+ display:flex;
+ gap:8px;
+ margin-top:9px;
+}
+button{
+ cursor:pointer;
+}
+.send,.stop{
+ flex:1;
+ padding:13px;
+ border-radius:10px;
+ font-weight:bold;
+}
+.send{
+ color:#001b08;
+ background:linear-gradient(135deg,#7dff9c,#19c957);
+ border:0;
+}
+.stop{
+ color:#ffb1b1;
+ background:#291010;
+ border:1px solid #8e3030;
+}
+footer{
+ text-align:center;
+ padding:9px;
+ font-size:10px;
+ color:#507b5d;
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<header>
+ <div class="logo">OG AI</div>
+ <div class="status">DEEPSEEK BACKEND • XN RAKIB EXCLUSIVE</div>
+</header>
+
+<div class="topbar">
+ <span>● LIVE MODE CONNECTED</span>
+ <span>VOICE: TTS READY</span>
+</div>
+
+<div id="chat">
+ <div class="msg bot">
+  <div class="msghead">
+   <span>OG AI</span>
+   <button class="speak" onclick="speakText(this)" title="Read aloud">🔊</button>
+  </div>
+  <div class="messageText">
+   দম আছে বস, পুরো ফর্মে আছি! বলো, কী করা লাগবে?
+  </div>
+ </div>
+</div>
+
+<div class="controls">
+ <textarea id="input" placeholder="UG AI-কে কিছু একটা বলো..."></textarea>
+ <div class="buttons">
+  <button class="send" onclick="sendMessage()">SEND MESSAGE ➤</button>
+  <button class="stop" onclick="stopVoice()">■ STOP VOICE</button>
+ </div>
+</div>
+
+<footer>UG AI • EXCLUSIVE FOR XN RAKIB</footer>
+</div>
+
+<script>
+const chat = document.getElementById("chat");
+const input = document.getElementById("input");
+
+function addMessage(text, type){
+ const box = document.createElement("div");
+ box.className = "msg " + type;
+
+ const head = document.createElement("div");
+ head.className = "msghead";
+
+ const name = document.createElement("span");
+ name.textContent = type === "user" ? "YOU" : "OG AI";
+
+ const speaker = document.createElement("button");
+ speaker.className = "speak";
+ speaker.textContent = "🔊";
+ speaker.title = "Read aloud";
+ speaker.onclick = () => speakText(speaker);
+
+ const content = document.createElement("div");
+ content.className = "messageText";
+ content.textContent = text;
+
+ head.appendChild(name);
+ head.appendChild(speaker);
+ box.appendChild(head);
+ box.appendChild(content);
+ chat.appendChild(box);
+
+ chat.scrollTop = chat.scrollHeight;
+}
+
+async function sendMessage(){
+ const text = input.value.trim();
+ if(!text) return;
+
+ addMessage(text, "user");
+ input.value = "";
+
+ // Loading placeholder
+ const loadingId = "loading_" + Date.now();
+ const loadingBox = document.createElement("div");
+ loadingBox.className = "msg bot";
+ loadingBox.id = loadingId;
+ loadingBox.innerHTML = `<div class="msghead"><span>OG AI</span></div><div class="messageText">ভাবছি...</div>`;
+ chat.appendChild(loadingBox);
+ chat.scrollTop = chat.scrollHeight;
+
+ try {
+  const response = await fetch("http://127.0.0.1:5000/chat", {
+   method: "POST",
+   headers: { "Content-Type": "application/json" },
+   body: JSON.stringify({ message: text, is_xn_rakib: true })
+  });
+  
+  const data = await response.json();
+  document.getElementById(loadingId).remove();
+  addMessage(data.reply || "কোনো উত্তর পাওয়া যায়নি।", "bot");
+ } catch (error) {
+  document.getElementById(loadingId).remove();
+  addMessage("সার্ভার কানেকশনে সমস্যা হচ্ছে! ফ্লাস্ক ব্যাকএন্ড রানিং আছে তো?", "bot");
+ }
+}
+
+function speakText(button){
+ const text = button.parentElement.nextElementSibling.innerText;
+ if(!text) return;
+
+ if(!("speechSynthesis" in window)){
+  alert("এই browser-এ Text-to-Speech support নেই।");
+  return;
+ }
+
+ speechSynthesis.cancel();
+ const utterance = new SpeechSynthesisUtterance(text);
+ utterance.lang = "bn-BD";
+ utterance.rate = 0.9;
+ utterance.pitch = 1.1;
+
+ const voices = speechSynthesis.getVoices();
+ const bengaliVoice = voices.find(v => v.lang.toLowerCase().startsWith("bn"));
+ if(bengaliVoice){
+  utterance.voice = bengaliVoice;
+ } else {
+  utterance.lang = "bn-IN";
+ }
+
+ speechSynthesis.speak(utterance);
+}
+
+function stopVoice(){
+ if("speechSynthesis" in window){
+  speechSynthesis.cancel();
+ }
+}
+
+input.addEventListener("keydown", function(e){
+ if(e.key === "Enter" && !e.shiftKey){
+  e.preventDefault();
+  sendMessage();
+ }
+});
+</script>
+
+</body>
+</html>
